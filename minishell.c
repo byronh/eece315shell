@@ -37,6 +37,30 @@ int parsePath(char *dirs) {
 	return 1;
 }
 
+int parseCommand(char *cLine, struct command_t *cmd) 
+{ 
+	int argc; 
+	char **clPtr; 
+
+	/* Initialization */ 
+	clPtr = &cLine; /* cLine is the command line */ 
+	argc = 0; 
+	cmd->argv[argc] = (char *) malloc(MAX_ARG_LEN); 
+
+	/* Fill argv[] */ 
+	while((cmd->argv[argc] = strsep(clPtr, WHITESPACE))!= NULL) 
+	{ 
+		cmd->argv[++argc] = (char *) malloc(MAX_ARG_LEN); 
+	}
+ 
+	/* Set the command name and argc */ 
+	cmd->argc = argc - 1; 
+	cmd->name = (char *) malloc(sizeof(cmd->argv[0])); 
+	strcpy(cmd->name, cmd->argv[0]); 
+
+	return 1; 
+} 
+
 int main (int argc, char *argv[]) {
 	//initialize
 	buffered = malloc(MAX_ARGS*MAX_ARG_LEN*sizeof(char));
