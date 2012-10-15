@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include "minishell.h"
 
-
-
 void printPrompt() {
 	/* Build the prompt string to have the machine name, current directory, or other desired information */
 	char promptString[] = "$" ; 
@@ -21,8 +19,7 @@ int parsePath(char *dirs) {
 	char *thePath;
 	int i;
 	
-	for(i=0; i<MAX_ARGS; i++) 
-	{
+	for(i=0; i<MAX_ARGS; i++) {
 		dirs[i] = NULL; /* set to null */
 	}
 	pathEnvVar = (char *) getenv ("PATH");
@@ -37,8 +34,7 @@ int parsePath(char *dirs) {
 	return 1;
 }
 
-int main (int argc, char *argv[])
-{
+int main (int argc, char *argv[]) {
 	//initialize
 	buffered = malloc(MAX_ARGS*MAX_ARG_LEN*sizeof(char));
 	dirs = malloc(MAX_PATHS*MAX_PATH_LEN*sizeof(char));
