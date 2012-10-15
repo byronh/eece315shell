@@ -14,8 +14,8 @@ static char* buffered;
 static char *dirs;
 
 struct command_t {
-    char *name;
-    int argc;
-    char *argv[MAX_ARGS];
+	char *name;
+	int argc;
+	char *argv[MAX_ARGS];
 };
 
