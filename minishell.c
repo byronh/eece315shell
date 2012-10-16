@@ -267,9 +267,15 @@ int main (int argc, char *argv[]) {
 			}
 			else
 			{
-				while(buffered != NULL)
+				printf("Not parallel");
+				if ((pid = fork()) == -1)
+					{
+						perror("fork error");
+					}
+				else if (pid == 0) 
 				{
-					execv(execPath,cmd.argv);
+				  	execv(execPath,cmd.argv);
+				  	printf("Return not expected. Must be an execv error.\n");
 				}
 			}
 		}
