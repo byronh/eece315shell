@@ -213,6 +213,7 @@ int main (int argc, char *argv[]) {
 	char* envPath [MAX_PATHS];
 	char* execPath;
 	struct command_t cmd;
+	int numChildren, runParallel, i, status;
 
 	parsePath(envPath);
 
@@ -235,19 +236,44 @@ int main (int argc, char *argv[]) {
 		}
 
 		// parseCommand will return 1 if parallel threading needed, 0 otherwise
-		parseCommand(buffered, &cmd);
+		runParallel = parseCommand(buffered, &cmd);
 		execPath = lookupPath(cmd.argv, envPath);
 
 		if (execPath != NULL) {
 			pid_t pid;
-			if ((pid = fork()) == -1) {
-				perror("Fork error.\n");
-			} else if (pid == 0) {
-				execv(execPath,cmd.argv);
-				printf("Return not expected. Must be an execv error.\n");
+			numChildren = 0;
+
+			if (runParallel)
+			{
+				printf("Run parallel\n");
+				while(buffered != NULL)
+				{
+					if ((pid = fork()) == -1)
+					{
+						perror("fork error");
+					}
+					else if (pid == 0) 
+					{
+					  	execv(execPath,cmd.argv);
+					  	printf("Return not expected. Must be an execv error.\n");
+					}
+					numChildren++;
+					printf("Childrens");
+				}
+				for (i = 0; i < numChildren; i++)
+				{
+					wait(&status);
+				}
+			}
+			else
+			{
+				while(buffered != NULL)
+				{
+					execv(execPath,cmd.argv);
+				}
 			}
 		}
-	}
+	}	
 	return 0;
 }
 
