@@ -246,11 +246,6 @@ int main (int argc, char *argv[]) {
 
 		// parseCommand will return 1 if parallel threading needed, 0 otherwise
 		runParallel = parseCommand(buffered, &cmd);
-		if ((redirect != NULL) && (strcmp(redirect, ""))) {
-			printf("Redirect! %s\n", redirect);
-			// Blah
-			redirect = NULL;
-		}
 
 		if (!strcmp(cmd.name, "cd")) {
 			if (cmd.argc == 0) {
@@ -268,38 +263,24 @@ int main (int argc, char *argv[]) {
 			pid_t pid;
 			numChildren = 0;
 
-			if (runParallel)
-			{
-				printf("Parallel\n");
-				while(1)
-				{
-					if ((pid = fork()) == -1)
-					{
-						perror("Fork error.\n");
-					}
-					else if (pid == 0) 
-					{
-					  	execv(execPath,cmd.argv);
-					  	printf("Return not expected. Must be an execv error.\n");
-					}
-					else break;
-				}
+			// Handle output redirection
+			if ((redirect != NULL) && (strcmp(redirect, ""))) {
+				strcat(execPath, " >> ");
+				strcat(execPath, redirect);
+				system(execPath);
+				redirect = NULL;
+				continue;
 			}
-			else
-			{
-				printf("Not parallel\n");
-				if ((pid = fork()) == -1)
-				{
-					perror("Fork error.\n");
-				}
-				else if (pid == 0) 
-				{
-				  	execv(execPath,cmd.argv);
-				  	printf("Return not expected. Must be an execv error.\n");
-				}
+
+			if ((pid = fork()) == -1) {
+				perror("Fork error.\n");
+			} else if (pid == 0) {
+		  		execv(execPath,cmd.argv);
+		  		printf("Return not expected. Must be an execv error.\n");
+			}
+			if (!runParallel) {
 				numChildren++;
-				for (i = 0; i < numChildren; i++)
-				{
+				for (i = 0; i < numChildren; i++) {
 					wait(&status);
 				}
 			}
