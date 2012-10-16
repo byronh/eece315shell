@@ -89,9 +89,27 @@ int parseCommand(char *cLine, struct command_t *cmd)
 	/* Set the command name and argc */ 
 	cmd->argc = argc - 1; 
 	cmd->name = (char *) malloc(sizeof(cmd->argv[0])); 
-	strcpy(cmd->name, cmd->argv[0]); 
+	strcpy(cmd->name, cmd->argv[0]);
 
-	return 1; 
+	char *lastWord = cmd->argv[argc - 1];
+
+	//printf("Test: %s\n", cmd->argv[argc - 1]);
+	//printf("The last word is %s\n",lastWord);
+	//printf("The size of the last word is %d\n",strlen(lastWord));
+	//printf("The last char is %c\n", lastWord[strlen(lastWord) - 1]);
+
+	if (lastWord[strlen(lastWord) - 1] == '&')
+	{
+		printf("Ampersand found!\n");
+		lastWord = NULL;
+		return 1;
+	}
+	else
+	{
+		printf("Ampersand not found\n");
+		lastWord = NULL;
+		return 0;
+	} 
 }
 
 // Runs an internal command and returns the output
@@ -190,6 +208,7 @@ int main (int argc, char *argv[]) {
 	printPrompt();
 	
 	readCommand(buffered);
+	// parseCommand will return 1 if parallel threading needed, 0 otherwise
 	parseCommand(buffered, &cmd);
 	execPath = lookupPath(cmd.argv, envPath);
 
