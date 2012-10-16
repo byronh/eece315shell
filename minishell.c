@@ -100,13 +100,11 @@ int parseCommand(char *cLine, struct command_t *cmd)
 
 	if (lastWord[strlen(lastWord) - 1] == '&')
 	{
-		printf("Ampersand found!\n");
 		lastWord = NULL;
 		return 1;
 	}
 	else
 	{
-		printf("Ampersand not found\n");
 		lastWord = NULL;
 		return 0;
 	} 
@@ -117,7 +115,7 @@ char* runInternalCommand(char *command) {
 	// Initialize variables
 	FILE *fileptr;
 	char *buffer = "%s >> %s";
-	char *filename = ".temp_internal_command_output";
+	char *filename = "/tmp/internal_command_output";
 	char *internal_command;
 
 	// Format the command to be sent to `system()` function
@@ -237,6 +235,17 @@ int main (int argc, char *argv[]) {
 
 		// parseCommand will return 1 if parallel threading needed, 0 otherwise
 		runParallel = parseCommand(buffered, &cmd);
+
+		if (!strcmp(cmd.name, "cd")) {
+			if (cmd.argc == 0) {
+				chdir("/");
+			} else {
+				if (chdir(cmd.argv[1]) == -1) {
+					printf("%s: No such file or directory.\n", cmd.argv[1]);
+				}
+			}
+			continue;
+		}
 		execPath = lookupPath(cmd.argv, envPath);
 
 		if (execPath != NULL) {
@@ -245,12 +254,11 @@ int main (int argc, char *argv[]) {
 
 			if (runParallel)
 			{
-				printf("Run parallel\n");
 				while(buffered != NULL)
 				{
 					if ((pid = fork()) == -1)
 					{
-						perror("fork error");
+						perror("Fork error.\n");
 					}
 					else if (pid == 0) 
 					{
@@ -267,11 +275,10 @@ int main (int argc, char *argv[]) {
 			}
 			else
 			{
-				printf("Not parallel");
 				if ((pid = fork()) == -1)
-					{
-						perror("fork error");
-					}
+				{
+					perror("Fork error.\n");
+				}
 				else if (pid == 0) 
 				{
 				  	execv(execPath,cmd.argv);
