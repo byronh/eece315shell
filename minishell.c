@@ -16,25 +16,46 @@ void readCommand(char* buffer) {
 	gets (buffer);
 }
 
-int parsePath(char *dirs) {
-	// This function reads the PATH variable for this environment, then builds
-	// an array, dirs[], of the directories in PATH
+
+void parsePath(char* dirs[]) {
 	char *pathEnvVar; 
 	char *thePath;
-	int i;
+	int i=0;
+	for(i=0; i<MAX_ARGS; i++) dirs[i] = NULL; /* set to null */
 	
-	for(i=0; i<MAX_ARGS; i++) {
-		dirs[i] = NULL; // set to null
-	}
 	pathEnvVar = (char *) getenv ("PATH");
 	thePath = (char *) malloc(strlen(pathEnvVar) + 1); 
+	
 	strcpy(thePath, pathEnvVar);
-	// Loop to parse thePath. Look for a ':' delimiter between each path name.
 	
-	printf("%s",thePath);
+	int start = 0;
+	int end = 0;
+	int dirsCount = 0;
 	
-	//TODO: parse the environment variable PATH which is in thePath
-	return 1;
+	for (i=0;i<strlen(thePath);i++)
+	{
+		char sampleChar[1];
+  		strncpy(sampleChar, thePath+i, 1);
+		if (sampleChar[0]==':')
+		{
+			char* eachPath = (char*)malloc(sizeof(char)*MAX_PATH_LEN);
+			if (start == 0)
+			{
+				strncpy(eachPath,thePath,i-start);
+			}
+			else
+			{
+				strncpy(eachPath,thePath+start+1,i-start-1);
+			}
+			dirs[dirsCount] = eachPath;
+			dirsCount++;
+			start = i;
+		}
+	}
+	//get the last path
+	char* eachPath = (char*)malloc(sizeof(char)*MAX_PATH_LEN);
+	strncpy(eachPath,thePath+start+1,strlen(thePath)-1-start);
+	dirs[dirsCount] = eachPath;
 }
 
 int parseCommand(char *cLine, struct command_t *cmd) 
@@ -98,14 +119,14 @@ int main (int argc, char *argv[]) {
 	//initialize
 	runInternalCommand("clear");
 	buffered = malloc(MAX_ARGS*MAX_ARG_LEN*sizeof(char));
-	dirs = malloc(MAX_PATHS*MAX_PATH_LEN*sizeof(char));
+	char* envPath [MAX_PATHS];
 
 	printf ("Enter a command\n");
 	printPrompt();
 	
 	readCommand(buffered);
-	parsePath(dirs);
-	
+	parsePath(envPath);
+
 	return 0;
 }
 
