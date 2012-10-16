@@ -152,7 +152,7 @@ char *lookupPath(char **argv, char **dir)
 	/* This function searches the directories identified by the dir argument to see 
 	if argv[0] (the file name) appears there. 
 	Allocate a new string, place the full path name in it, then return the string. */ 
-	char* pName;
+	char* pName = (char *)malloc(MAX_PATH_LEN);
 	char* slashName;
 	char* fullName;
 	int i;
@@ -167,8 +167,8 @@ char *lookupPath(char **argv, char **dir)
 	}
 
 	for(i = 0; i < MAX_PATHS; i++) {
-		pName = dir[i];
-		if (pName == NULL) break;
+		if (dir[i] == NULL) break;
+		strcpy(pName, dir[i]);
 		slashName = strcat(pName,"/");
 		fullName = strcat(slashName,*argv);
 		// look in PATH directories, use access() to see if file is in a dir
