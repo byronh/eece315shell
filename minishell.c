@@ -191,12 +191,19 @@ void printPrompt() {
 	printf("%s@%s %s $ ", user, machine, currentdir);
 }
 
-int onlyWhitespace(char *str) {
-	while (*str != '\0') {
-		if (!isspace(*str)) return 0;
-		str++;
-	}
-	return 1;
+// Trims whitespace
+void trim(char *str) {
+	int i;
+	int begin = 0;
+	int end = strlen(str) - 1;
+	// Start from beginning and count whitespaces, same with end but backwards
+	while (isspace(str[begin])) begin++;
+	while (isspace(str[end]) && (end >= begin)) end--;
+	// Shift the string back to the first position
+	for (i = begin; i <= end; i++)
+		str[i - begin] = str[i];
+	// Null terminate the string
+	str[i - begin] = '\0';
 }
 
 int main (int argc, char *argv[]) {
@@ -213,11 +220,23 @@ int main (int argc, char *argv[]) {
 	parsePath(envPath);
 
 	while (1) {
+
 		printPrompt();
-		
 		readCommand(buffered);
-		if (onlyWhitespace(buffered)) continue;
+
+		// Ignore commands that are only whitespace
+		trim(buffered);
+		if (!strcmp(buffered, "")) continue;
+
+		// Exit and quit commands
+		if (!strcmp(buffered, "quit") || !strcmp(buffered, "exit")) return 0;
 		
+		// Run internal commands
+		if (!strcmp(buffered, "pwd")) {
+			printf("%s\n", runInternalCommand("pwd"));
+			continue;
+		}
+
 		// parseCommand will return 1 if parallel threading needed, 0 otherwise
 		parseCommand(buffered, &cmd);
 		execPath = lookupPath(cmd.argv, envPath);
