@@ -100,6 +100,7 @@ int parseCommand(char *cLine, struct command_t *cmd)
 
 	if (lastWord[strlen(lastWord) - 1] == '&')
 	{
+		cmd->argv[argc - 1][strlen(lastWord) - 1] = '\0';
 		lastWord = NULL;
 		return 1;
 	}
