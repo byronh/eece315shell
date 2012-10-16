@@ -139,9 +139,8 @@ char *lookupPath(char **argv, char **dir)
 	/* This function searches the directories identified by the dir argument to see 
 	if argv[0] (the file name) appears there. 
 	Allocate a new string, place the full path name in it, then return the string. */ 
-	char *result; 
 	char* pName;
-	int i, j;
+	int i;
 
 	printf("%s", *argv);
 
@@ -175,7 +174,7 @@ int main (int argc, char *argv[]) {
 	runInternalCommand("clear");
 	buffered = malloc(MAX_ARGS*MAX_ARG_LEN*sizeof(char));
 	char* envPath [MAX_PATHS];
-	struct command_t *cmd;
+	struct command_t cmd;
 
 	parsePath(envPath);
 
@@ -183,8 +182,8 @@ int main (int argc, char *argv[]) {
 	printPrompt();
 	
 	readCommand(buffered);
-	parseCommand(buffered, cmd);
-	lookupPath(cmd->argv, envPath);
+	parseCommand(buffered, &cmd);
+	lookupPath(cmd.argv, envPath);
 
 	return 0;
 }
