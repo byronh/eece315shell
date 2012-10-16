@@ -157,29 +157,26 @@ char *lookupPath(char **argv, char **dir)
 	char* fullName;
 	int i;
 
-	//printf("%s", *argv);
-
-	if (*argv[0] == '/')
-	{
+	if (*argv[0] == '/') {
 		// check to see if file name already absolute path
-		if (access(*argv, F_OK) != -1)
-		{
+		if (access(*argv, F_OK) != -1) {
 			return *argv;
 		}
+		fprintf(stderr, "%s: Command not found.\n", argv[0]);
+		return NULL;
 	}
 
-	for(i = 0; i < MAX_PATHS; i++)
-	{
+	for(i = 0; i < MAX_PATHS; i++) {
 		pName = dir[i];
+		if (pName == NULL) break;
 		slashName = strcat(pName,"/");
 		fullName = strcat(slashName,*argv);
 		// look in PATH directories, use access() to see if file is in a dir
-		if (access(fullName, F_OK) != -1)
-		{
+		if (access(fullName, F_OK) != -1) {
 			return fullName;
 		}
 	}
-	fprintf(stderr, "%s: Command not found!!!!!\n", argv[0]);
+	fprintf(stderr, "%s: Command not found.\n", argv[0]);
 	return NULL;
 }
 
@@ -241,17 +238,14 @@ int main (int argc, char *argv[]) {
 		parseCommand(buffered, &cmd);
 		execPath = lookupPath(cmd.argv, envPath);
 
-		pid_t pid;
-
-		if ((pid = fork()) == -1)
-		{
-			perror("fork error");
-		}
-		
-		else if (pid == 0) 
-		{
-		  execv(execPath,cmd.argv);
-		  printf("Return not expected. Must be an execv error.\n");
+		if (execPath != NULL) {
+			pid_t pid;
+			if ((pid = fork()) == -1) {
+				perror("Fork error.\n");
+			} else if (pid == 0) {
+				execv(execPath,cmd.argv);
+				printf("Return not expected. Must be an execv error.\n");
+			}
 		}
 	}
 	return 0;
