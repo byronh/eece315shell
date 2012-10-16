@@ -21,13 +21,6 @@ struct command_t {
 	char *argv[MAX_ARGS];
 };
 
-void printPrompt() {
-	// Build the prompt string to have the machine name, current directory, or
-	// other desired information
-	char promptString[] = "$" ; 
-	printf("%s", promptString);
-}
-
 void readCommand(char* buffer) {
 	// This code uses any set of I/O functions, such as those in the stdio
 	// library to read the entire command line into the buffer.
@@ -101,8 +94,8 @@ int parseCommand(char *cLine, struct command_t *cmd)
 	return 1; 
 }
 
-// Runs an internal command and prints the output
-int runInternalCommand(char *command) {
+// Runs an internal command and returns the output
+char* runInternalCommand(char *command) {
 	// Initialize variables
 	FILE *fileptr;
 	char *buffer = "%s >> %s";
@@ -114,24 +107,26 @@ int runInternalCommand(char *command) {
 	internal_command = malloc(size + 1);
 	snprintf(internal_command, size + 1, buffer, command, filename);
 
-	// Run the command. The `>>` redirects output a file
+	// Run the command. The `>>` redirects output to a file
 	int retval = system(internal_command);
 	if (retval != 0) {
 		printf("Error: Internal command `%s` failed.", command);
-		return -1;
+		return NULL;
 	}
 
-	// Read the output from the temporary file and print it
+	// Read the output from the temporary file and store in result
 	fileptr = fopen(filename, "r");
 	char output[1024];
-	while (fgets(output, sizeof(output) - 1, fileptr) != NULL) {
-		printf("%s", output);
-	}
-
+	fgets(output, sizeof(output) - 1, fileptr);
+	size_t ln = strlen(output) - 1;
+	if (output[ln] == '\n') output[ln] = '\0'; // Strip newline
+	char *result = malloc(ln + 1);
+	strcpy(result, output);
+	
 	// Close the temporary file and delete it
 	fclose(fileptr);
 	remove(filename);
-	return 0;
+	return result;
 }
 
 char *lookupPath(char **argv, char **dir)
@@ -166,12 +161,20 @@ char *lookupPath(char **argv, char **dir)
 	return NULL;
 }
 
+void printPrompt() {
+	// Builds the prompt string with user, machine name, and current directory
+	char *user = runInternalCommand("whoami");
+	char *machine = runInternalCommand("hostname");
+	char *currentdir = runInternalCommand("pwd");
+	printf("%s@%s %s $ ", user, machine, currentdir);
+}
+
 int main (int argc, char *argv[]) {
 
 	static char* buffered;
 
 	//initialize
-	runInternalCommand("clear");
+	system("clear");
 	buffered = malloc(MAX_ARGS*MAX_ARG_LEN*sizeof(char));
 	char* envPath [MAX_PATHS];
 	struct command_t cmd;
