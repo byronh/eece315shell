@@ -124,6 +124,7 @@ int parseCommand(char *cLine, struct command_t *cmd)
 
 	if (lastWord[strlen(lastWord) - 1] == '&')
 	{
+		cmd->argv[argc - 1][strlen(lastWord) - 1] = '\0';
 		lastWord = NULL;
 		return 1;
 	}
@@ -221,6 +222,7 @@ int main (int argc, char *argv[]) {
 	char* execPath;
 	struct command_t cmd;
 	int numChildren, runParallel, i, status;
+	FILE *fid;
 
 	parsePath(envPath);
 
@@ -268,7 +270,8 @@ int main (int argc, char *argv[]) {
 
 			if (runParallel)
 			{
-				while(buffered != NULL)
+				printf("Parallel\n");
+				while(1)
 				{
 					if ((pid = fork()) == -1)
 					{
@@ -279,16 +282,12 @@ int main (int argc, char *argv[]) {
 					  	execv(execPath,cmd.argv);
 					  	printf("Return not expected. Must be an execv error.\n");
 					}
-					numChildren++;
-					printf("Childrens");
-				}
-				for (i = 0; i < numChildren; i++)
-				{
-					wait(&status);
+					else break;
 				}
 			}
 			else
 			{
+				printf("Not parallel\n");
 				if ((pid = fork()) == -1)
 				{
 					perror("Fork error.\n");
@@ -297,6 +296,11 @@ int main (int argc, char *argv[]) {
 				{
 				  	execv(execPath,cmd.argv);
 				  	printf("Return not expected. Must be an execv error.\n");
+				}
+				numChildren++;
+				for (i = 0; i < numChildren; i++)
+				{
+					wait(&status);
 				}
 			}
 		}
