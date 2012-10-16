@@ -117,11 +117,6 @@ int parseCommand(char *cLine, struct command_t *cmd)
 
 	char *lastWord = cmd->argv[argc - 1];
 
-	//printf("Test: %s\n", cmd->argv[argc - 1]);
-	//printf("The last word is %s\n",lastWord);
-	//printf("The size of the last word is %d\n",strlen(lastWord));
-	//printf("The last char is %c\n", lastWord[strlen(lastWord) - 1]);
-
 	if (lastWord[strlen(lastWord) - 1] == '&')
 	{
 		cmd->argv[argc - 1][strlen(lastWord) - 1] = '\0';
