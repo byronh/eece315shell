@@ -1,6 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "minishell.h"
+#include <unistd.h>
+#include <string.h>
+
+
+#define LINE_LEN 80
+#define MAX_ARGS 64
+#define MAX_ARG_LEN 16
+#define MAX_PATHS 64
+#define MAX_PATH_LEN 96
+#define WHITESPACE " .,\t\n"
+
+#ifndef NULL 
+#define NULL ... 
+#endif
+
+struct command_t {
+	char *name;
+	int argc;
+	char *argv[MAX_ARGS];
+};
 
 void printPrompt() {
 	// Build the prompt string to have the machine name, current directory, or
@@ -115,17 +134,57 @@ int runInternalCommand(char *command) {
 	return 0;
 }
 
+char *lookupPath(char **argv, char **dir)
+{
+	/* This function searches the directories identified by the dir argument to see 
+	if argv[0] (the file name) appears there. 
+	Allocate a new string, place the full path name in it, then return the string. */ 
+	char *result; 
+	char* pName;
+	int i, j;
+
+	printf("%s", *argv);
+
+	if (*argv[0] == '/')
+	{
+		// check to see if file name already absolute path
+		if (access(*argv, F_OK) != -1)
+		{
+			return *argv;
+		}
+	}
+
+	for(i = 0; i < MAX_PATHS; i++)
+	{
+		pName = dir[i];
+		// look in PATH directories, use access() to see if file is in a dir
+		if (access(pName, F_OK) != -1)
+		{
+			return pName;
+		}
+	}
+	fprintf(stderr, "%s: Command not found!!!!!\n", argv[0]);
+	return NULL;
+}
+
 int main (int argc, char *argv[]) {
+
+	static char* buffered;
+
 	//initialize
 	runInternalCommand("clear");
 	buffered = malloc(MAX_ARGS*MAX_ARG_LEN*sizeof(char));
 	char* envPath [MAX_PATHS];
+	struct command_t *cmd;
+
+	parsePath(envPath);
 
 	printf ("Enter a command\n");
 	printPrompt();
 	
 	readCommand(buffered);
-	parsePath(envPath);
+	parseCommand(buffered, cmd);
+	lookupPath(cmd->argv, envPath);
 
 	return 0;
 }
