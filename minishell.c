@@ -47,7 +47,7 @@ void parsePath(char* dirs[]) {
 	for (i=0;i<strlen(thePath);i++)
 	{
 		char sampleChar[1];
-  		strncpy(sampleChar, thePath+i, 1);
+		strncpy(sampleChar, thePath+i, 1);
 		if (sampleChar[0]==':')
 		{
 			char* eachPath = (char*)malloc(sizeof(char)*MAX_PATH_LEN);
@@ -191,6 +191,14 @@ void printPrompt() {
 	printf("%s@%s %s $ ", user, machine, currentdir);
 }
 
+int onlyWhitespace(char *str) {
+	while (*str != '\0') {
+		if (!isspace(*str)) return 0;
+		str++;
+	}
+	return 1;
+}
+
 int main (int argc, char *argv[]) {
 
 	static char* buffered;
@@ -204,27 +212,29 @@ int main (int argc, char *argv[]) {
 
 	parsePath(envPath);
 
-	printf ("Enter a command\n");
-	printPrompt();
-	
-	readCommand(buffered);
-	// parseCommand will return 1 if parallel threading needed, 0 otherwise
-	parseCommand(buffered, &cmd);
-	execPath = lookupPath(cmd.argv, envPath);
+	while (1) {
+		printPrompt();
+		
+		readCommand(buffered);
+		if (onlyWhitespace(buffered)) continue;
+		
+		// parseCommand will return 1 if parallel threading needed, 0 otherwise
+		parseCommand(buffered, &cmd);
+		execPath = lookupPath(cmd.argv, envPath);
 
-	pid_t pid;
+		pid_t pid;
 
-   	if ((pid = fork()) == -1)
-   	{
-    	perror("fork error");
-    }
-    
-   	else if (pid == 0) 
-   	{
-	  execv(execPath,cmd.argv);
-      printf("Return not expected. Must be an execv error.\n");
-   	}
-   
+		if ((pid = fork()) == -1)
+		{
+			perror("fork error");
+		}
+		
+		else if (pid == 0) 
+		{
+		  execv(execPath,cmd.argv);
+		  printf("Return not expected. Must be an execv error.\n");
+		}
+	}
 	return 0;
 }
 
