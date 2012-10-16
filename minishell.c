@@ -9,11 +9,13 @@
 #define MAX_ARG_LEN 16
 #define MAX_PATHS 64
 #define MAX_PATH_LEN 96
-#define WHITESPACE " .,\t\n"
+#define WHITESPACE " \t\n"
 
 #ifndef NULL 
 #define NULL ... 
 #endif
+
+char* redirect;
 
 struct command_t {
 	char *name;
@@ -25,9 +27,23 @@ void readCommand(char* buffer) {
 	// This code uses any set of I/O functions, such as those in the stdio
 	// library to read the entire command line into the buffer.
 	// This implementation is greatly simplified, but it does the job.
-	gets (buffer);
+	gets(buffer);
 }
 
+// Trims whitespace
+void trim(char *str) {
+	int i;
+	int begin = 0;
+	int end = strlen(str) - 1;
+	// Start from beginning and count whitespaces, same with end but backwards
+	while (isspace(str[begin])) begin++;
+	while (isspace(str[end]) && (end >= begin)) end--;
+	// Shift the string back to the first position
+	for (i = begin; i <= end; i++)
+		str[i - begin] = str[i];
+	// Null terminate the string
+	str[i - begin] = '\0';
+}
 
 void parsePath(char* dirs[]) {
 	char *pathEnvVar; 
@@ -75,10 +91,18 @@ int parseCommand(char *cLine, struct command_t *cmd)
 	int argc; 
 	char **clPtr; 
 
+	// Check if output must be redirected
+	if (strchr(cLine, '>') != NULL) {
+		char *command = strsep(&cLine, ">");
+		redirect = strsep(&cLine, ">");
+		trim(command); trim(redirect);
+		cLine = command;
+	}
+
 	/* Initialization */ 
 	clPtr = &cLine; /* cLine is the command line */ 
 	argc = 0; 
-	cmd->argv[argc] = (char *) malloc(MAX_ARG_LEN); 
+	cmd->argv[argc] = (char *) malloc(MAX_ARG_LEN);
 
 	/* Fill argv[] */ 
 	while((cmd->argv[argc] = strsep(clPtr, WHITESPACE))!= NULL) 
@@ -186,21 +210,6 @@ void printPrompt() {
 	printf("%s@%s %s $ ", user, machine, currentdir);
 }
 
-// Trims whitespace
-void trim(char *str) {
-	int i;
-	int begin = 0;
-	int end = strlen(str) - 1;
-	// Start from beginning and count whitespaces, same with end but backwards
-	while (isspace(str[begin])) begin++;
-	while (isspace(str[end]) && (end >= begin)) end--;
-	// Shift the string back to the first position
-	for (i = begin; i <= end; i++)
-		str[i - begin] = str[i];
-	// Null terminate the string
-	str[i - begin] = '\0';
-}
-
 int main (int argc, char *argv[]) {
 
 	static char* buffered;
@@ -235,6 +244,11 @@ int main (int argc, char *argv[]) {
 
 		// parseCommand will return 1 if parallel threading needed, 0 otherwise
 		runParallel = parseCommand(buffered, &cmd);
+		if ((redirect != NULL) && (strcmp(redirect, ""))) {
+			printf("Redirect! %s\n", redirect);
+			// Blah
+			redirect = NULL;
+		}
 
 		if (!strcmp(cmd.name, "cd")) {
 			if (cmd.argc == 0) {
