@@ -140,9 +140,11 @@ char *lookupPath(char **argv, char **dir)
 	if argv[0] (the file name) appears there. 
 	Allocate a new string, place the full path name in it, then return the string. */ 
 	char* pName;
+	char* slashName;
+	char* fullName;
 	int i;
 
-	printf("%s", *argv);
+	//printf("%s", *argv);
 
 	if (*argv[0] == '/')
 	{
@@ -156,10 +158,12 @@ char *lookupPath(char **argv, char **dir)
 	for(i = 0; i < MAX_PATHS; i++)
 	{
 		pName = dir[i];
+		slashName = strcat(pName,"/");
+		fullName = strcat(slashName,*argv);
 		// look in PATH directories, use access() to see if file is in a dir
-		if (access(pName, F_OK) != -1)
+		if (access(fullName, F_OK) != -1)
 		{
-			return pName;
+			return fullName;
 		}
 	}
 	fprintf(stderr, "%s: Command not found!!!!!\n", argv[0]);
@@ -174,6 +178,7 @@ int main (int argc, char *argv[]) {
 	runInternalCommand("clear");
 	buffered = malloc(MAX_ARGS*MAX_ARG_LEN*sizeof(char));
 	char* envPath [MAX_PATHS];
+	char* execPath;
 	struct command_t cmd;
 
 	parsePath(envPath);
@@ -183,8 +188,21 @@ int main (int argc, char *argv[]) {
 	
 	readCommand(buffered);
 	parseCommand(buffered, &cmd);
-	lookupPath(cmd.argv, envPath);
+	execPath = lookupPath(cmd.argv, envPath);
 
+	pid_t pid;
+
+   	if ((pid = fork()) == -1)
+   	{
+    	perror("fork error");
+    }
+    
+   	else if (pid == 0) 
+   	{
+	  execv(execPath,cmd.argv);
+      printf("Return not expected. Must be an execv error.\n");
+   	}
+   
 	return 0;
 }
 
